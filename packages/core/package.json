@@ -1,6 +1,6 @@
 {
   "name": "@xiaolh-cli-dev/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "xiaolh-cli-dev core",
   "author": "xiaolonghao <xiaolonghao@linklogis.com>",
   "homepage": "",
@@ -20,6 +20,6 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "@xiaolh-cli-dev/utils": "^1.0.0"
+    "@xiaolh-cli-dev/utils": "^1.0.1"
   }
 }
