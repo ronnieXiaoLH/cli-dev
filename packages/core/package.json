@@ -1,0 +1,25 @@
+{
+  "name": "@xiaolh-cli-dev/core",
+  "version": "1.0.0",
+  "description": "xiaolh-cli-dev core",
+  "author": "xiaolonghao <xiaolonghao@linklogis.com>",
+  "homepage": "",
+  "license": "ISC",
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmmirror.com/"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "dependencies": {
+    "@xiaolh-cli-dev/utils": "^1.0.0"
+  }
+}

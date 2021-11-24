@@ -1,0 +1,15 @@
+{
+  "name": "my-cli-dev",
+  "version": "1.0.0",
+  "description": "cli dev",
+  "main": "index.js",
+  "scripts": {
+    "init": "lerna init"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "lerna": "^4.0.0"
+  }
+}
