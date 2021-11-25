@@ -23,6 +23,6 @@
     "xlh-cli": "bin/index.js"
   },
   "dependencies": {
-    "@xiaolh-cli-dev/utils": "^1.0.2"
+    "@xiaolh-cli-dev/utils": "file:../utils"
   }
 }
