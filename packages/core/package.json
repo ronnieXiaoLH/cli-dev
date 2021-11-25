@@ -1,6 +1,6 @@
 {
   "name": "@xiaolh-cli-dev/core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "xiaolh-cli-dev core",
   "author": "xiaolonghao <xiaolonghao@linklogis.com>",
   "homepage": "",
@@ -23,6 +23,6 @@
     "xlh-cli": "bin/index.js"
   },
   "dependencies": {
-    "@xiaolh-cli-dev/utils": "^1.0.1"
+    "@xiaolh-cli-dev/utils": "^1.0.2"
   }
 }
