@@ -14,10 +14,13 @@
     "lib"
   ],
   "publishConfig": {
-    "registry": "https://registry.npmmirror.com/"
+    "access": "public"
   },
   "scripts": {
     "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bin": {
+    "xlh-cli": "bin/index.js"
   },
   "dependencies": {
     "@xiaolh-cli-dev/utils": "^1.0.1"
