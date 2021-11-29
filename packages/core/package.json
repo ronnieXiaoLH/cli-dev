@@ -24,5 +24,9 @@
   },
   "dependencies": {
     "@xiaolh-cli-dev/utils": "^1.0.2"
+  },
+  "devDependencies": {
+    "dedent": "^0.7.0",
+    "yargs": "^17.2.1"
   }
 }
