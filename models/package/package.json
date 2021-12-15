@@ -1,0 +1,38 @@
+{
+  "name": "@xiaolh-cli-dev/package",
+  "version": "1.0.2",
+  "description": "> TODO: description",
+  "author": "xiaolonghao <xiaolonghao@linklogis.com>",
+  "homepage": "https://github.com/ronnieXiaoLH/cli-dev#readme",
+  "license": "ISC",
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "registry": "http://nexus.linklogis.cn/nexus/content/groups/lls-npm/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ronnieXiaoLH/cli-dev.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/ronnieXiaoLH/cli-dev/issues"
+  },
+  "dependencies": {
+    "@xiaolh-cli-dev/format-path": "file:../../utils/format-path",
+    "@xiaolh-cli-dev/get-npm-info": "file:../../utils/get-npm-info",
+    "@xiaolh-cli-dev/utils": "file:../../utils/utils",
+    "fs-extra": "^10.0.0",
+    "npminstall": "^5.3.1",
+    "path-exists": "^4.0.0",
+    "pkg-dir": "^5.0.0"
+  }
+}

@@ -1,8 +1,5 @@
-'use strict';
+const isObject = o => Object.prototype.toString.call(o) === '[object Object]'
 
-module.exports = sum;
-
-function sum(a, b) {
-    // TODO
-    return a + b
+module.exports = {
+    isObject
 }
