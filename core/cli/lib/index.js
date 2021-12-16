@@ -23,7 +23,6 @@ async function core() {
     await prepare()
     // commnnd 初始化
     registerCommand()
-    // checkNodeVersion()
   } catch (error) {
     log.error(error.message)
   }
@@ -40,15 +39,6 @@ async function prepare () {
 // 检查包的版本号
 function checkPkgVersion () {
     log.notice('cli', pkg.version)
-}
-
-// 检查 Node 的版本，最低版本的限制
-function checkNodeVersion () {
-    const currentVersion = process.version
-    const lowestVersion = constant.LOWEST_NODE_VERSION
-    if (!semver.gte(currentVersion, lowestVersion)) {
-        throw new Error(colors.red(`xlh-cli 需要安装 V${lowestVersion} 以上版本的 Node.js`))
-    }
 }
 
 // 检查用户，根用户自动降级

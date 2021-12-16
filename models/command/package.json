@@ -1,5 +1,5 @@
 {
-  "name": "@xiaolh-cli-dev/init",
+  "name": "@xiaolh-cli-dev/command",
   "version": "1.0.2",
   "description": "> TODO: description",
   "author": "xiaolonghao <xiaolonghao@linklogis.com>",
@@ -27,7 +27,8 @@
     "url": "https://github.com/ronnieXiaoLH/cli-dev/issues"
   },
   "dependencies": {
-    "@xiaolh-cli-dev/command": "file:../../models/command",
-    "@xiaolh-cli-dev/log": "file:../../utils/log"
+    "@xiaolh-cli-dev/log": "file:../../utils/log",
+    "semver": "^7.3.5",
+    "colors": "^1.4.0"
   }
 }

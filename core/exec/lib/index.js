@@ -1,9 +1,11 @@
 const path = require('path')
+const cp = require('child_process')
 const Package = require('@xiaolh-cli-dev/package')
 const log = require('@xiaolh-cli-dev/log')
+// const formatPath = require('@xiaolh-cli-dev/format-path')
 
 const SETTINGS = {
-  init: '@xiaolh-cli-dev/utils'
+  init: '@xiaolh-cli-dev/init'
 }
 
 const CACHE_DIR  = 'dependencies/'
@@ -36,7 +38,7 @@ async function exec () {
   if (await package.exists()) {
     // 更新 package
     console.log('更新 package')
-    await package.update()
+    // await package.update()
   } else {
     // 安装 package
     console.log('安装 package')
@@ -44,9 +46,47 @@ async function exec () {
   }
   console.log(package)
 
-  const rootFile = package.getRootFilePath()
-  rootFile && require(rootFile).apply(null, arguments)
+  // const rootFile = formatPath(package.getRootFilePath())
+  const rootFile = package.getRootFilePath().replace(/\\/g, '/')
+  if (!rootFile) return
+  try {
+    // 在当前进程中执行
+    // require(rootFile).call(null, Array.from(arguments))
+    // 在 node 子进程中执行
+    const args = Array.from(arguments)
+    const cmd = args[args.length - 1]
+    const obj = Object.create(null)
+    Object.keys(cmd).forEach(key => {
+      if (cmd.hasOwnProperty(key) && !key.startsWith('_') && key !== 'parent') {
+        obj[key] = cmd[key]
+      }
+    })
+    args[args.length - 1] = obj
+    const code = `require('${rootFile}').call(null, ${JSON.stringify(args)})`
+    const child = spawn('node', ['-e', code], {
+      cwd: process.cwd(),
+      stdio: 'inherit'
+    })
+    child.on('error', err => {
+      log.error(err.message)
+      process.exit(1)
+    })
+    child.on('exit', e => {
+      log.success('命令执行成功：', e)
+      process.exit(e)
+    })
+  } catch (error) {
+    log.error(error.message)
+  }
   console.log('getRootFilePath', package.getRootFilePath())
+}
+
+function spawn (command, args, options) {
+  const win32 = process.platform === 'win32'
+  const cmd = win32 ? 'cmd' : command
+  const cmdArgs = win32 ? ['/c'].concat(command, args) : args
+
+  return cp.spawn(cmd, cmdArgs, options || {})
 }
 
 module.exports = exec
