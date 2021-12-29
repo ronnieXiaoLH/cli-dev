@@ -38,6 +38,7 @@ async function exec () {
   if (await package.exists()) {
     // 更新 package
     console.log('更新 package')
+    // 本地的包未发布到 npm 之前，更新会报 404
     // await package.update()
   } else {
     // 安装 package
@@ -46,8 +47,10 @@ async function exec () {
   }
   console.log(package)
 
-  // const rootFile = formatPath(package.getRootFilePath())
-  const rootFile = package.getRootFilePath().replace(/\\/g, '/')
+  let rootFile = package.getRootFilePath()
+  if (process.platform === 'win32') {
+    rootFile = rootFile.replace(/\\/g, '/')
+  }
   if (!rootFile) return
   try {
     // 在当前进程中执行
@@ -78,7 +81,6 @@ async function exec () {
   } catch (error) {
     log.error(error.message)
   }
-  console.log('getRootFilePath', package.getRootFilePath())
 }
 
 function spawn (command, args, options) {

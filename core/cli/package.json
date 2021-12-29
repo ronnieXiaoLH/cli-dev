@@ -23,11 +23,11 @@
     "xlh-cli": "bin/index.js"
   },
   "dependencies": {
+    "@xiaolh-cli-dev/exec": "file:../exec",
     "@xiaolh-cli-dev/get-npm-info": "file:../../utils/get-npm-info",
+    "@xiaolh-cli-dev/init": "file:../../commands/init",
     "@xiaolh-cli-dev/log": "file:../../utils/log",
     "@xiaolh-cli-dev/utils": "file:../../utils/utils",
-    "@xiaolh-cli-dev/init": "file:../../commands/init",
-    "@xiaolh-cli-dev/exec": "file:../exec",
     "colors": "^1.4.0",
     "commander": "^8.3.0",
     "dotenv": "^10.0.0",
