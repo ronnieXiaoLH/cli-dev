@@ -1,9 +1,14 @@
+const path = require('path')
 const fs = require('fs')
 const inquirer = require('inquirer')
 const fse = require('fs-extra')
 const semver = require('semver')
+const userHome = require('user-home')
 const Command = require('@xiaolh-cli-dev/command')
 const log = require('@xiaolh-cli-dev/log')
+const Package = require('@xiaolh-cli-dev/package')
+const { spinnerStart, sleep } = require('@xiaolh-cli-dev/utils')
+const getProjectTemplate = require('./getProjectTemplate')
 
 const TYPE_PROJECT = 'project'
 const TYPE_COMPONENT = 'component'
@@ -22,11 +27,16 @@ class InitCommand extends Command {
 
   async exec () {
     try {
+      // 0. 判断项目模板是否存在
+      const template = await getProjectTemplate()
+      if (!template || template.length === 0) {
+        throw new Error('项目模板不存在')
+      }
+      this.template = template
       // 1. 准备阶段
-      const projectInfo = await this.prepare()
-      console.log(projectInfo)
+      this.projectInfo = await this.prepare()
       // 2. 下载模板
-
+      await this.downloadTemplate()
       // 3. 安装模板
     } catch (e) {
       log.error(e.message)
@@ -136,6 +146,13 @@ class InitCommand extends Command {
           filter: function (v) {
             return semver.valid(v) || v
           }
+        },
+        {
+          type: 'list',
+          name: 'projectTemplate',
+          message: '请选择项目模板',
+          default: '1.0.0',
+          choices: this.createTemplateChoice()
         }
       ])
       projectInfo = {
@@ -146,6 +163,51 @@ class InitCommand extends Command {
 
     }
     return projectInfo
+  }
+
+  async downloadTemplate() {
+    const { projectTemplate } = this.projectInfo
+    const templateInfo = this.template.find(item => item.npmName === projectTemplate)
+    const targetPath = path.resolve(userHome, process.env.CLI_HOME, 'template')
+    const storeDir = path.resolve(targetPath, 'node_modules')
+    const { npmName, version } = templateInfo
+    const templateNpm = new Package({
+      targetPath,
+      storeDir,
+      packageName: npmName,
+      packageVersion: version
+    })
+    if (!await templateNpm.exists()) {
+      const spinner = spinnerStart('正在下载模板...')
+      try {
+        await templateNpm.install()
+        log.success('下载模板成功')
+      } catch (error) {
+        throw new Error(error)
+      } finally {
+        spinner.stop(true)
+      }
+    } else {
+      const spinner = spinnerStart('正在更新模板...')
+      try {
+        await sleep()
+        await templateNpm.update()
+        log.success('更新模板成功')
+      } catch (error) {
+        throw new Error(error)
+      } finally {
+        spinner.stop(true)
+      }
+    }
+  }
+
+  createTemplateChoice () {
+    return this.template.map(item => {
+      return {
+        name: item.name,
+        value: item.npmName
+      }
+    })
   }
 }
 
