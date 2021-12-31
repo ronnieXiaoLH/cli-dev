@@ -72,6 +72,8 @@ class Package {
       })
       // 安装了最新的版本后，要更新 packageVersion
       this.packageVersion = latestPackageVersion
+    } else {
+      this.packageVersion = latestPackageVersion
     }
   }
 

@@ -1,7 +1,7 @@
 const path = require('path')
-const cp = require('child_process')
 const Package = require('@xiaolh-cli-dev/package')
 const log = require('@xiaolh-cli-dev/log')
+const { exec: spawn } = require('@xiaolh-cli-dev/utils')
 // const formatPath = require('@xiaolh-cli-dev/format-path')
 
 const SETTINGS = {
@@ -45,7 +45,7 @@ async function exec () {
     console.log('安装 package')
     await package.install()
   }
-  console.log(package)
+  log.verbose(package)
 
   let rootFile = package.getRootFilePath()
   if (process.platform === 'win32') {
@@ -66,6 +66,7 @@ async function exec () {
     })
     args[args.length - 1] = obj
     const code = `require('${rootFile}').call(null, ${JSON.stringify(args)})`
+    // 使用 node 执行加载到的包的代码
     const child = spawn('node', ['-e', code], {
       cwd: process.cwd(),
       stdio: 'inherit'
@@ -81,14 +82,6 @@ async function exec () {
   } catch (error) {
     log.error(error.message)
   }
-}
-
-function spawn (command, args, options) {
-  const win32 = process.platform === 'win32'
-  const cmd = win32 ? 'cmd' : command
-  const cmdArgs = win32 ? ['/c'].concat(command, args) : args
-
-  return cp.spawn(cmd, cmdArgs, options || {})
 }
 
 module.exports = exec
