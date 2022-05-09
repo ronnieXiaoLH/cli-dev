@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 const semver = require('semver')
 const colors = require('colors/safe')
 const userHome = require('user-home')
@@ -11,13 +11,13 @@ const exec = require('@xiaolh-cli-dev/exec')
 const pkg = require('../package.json')
 const constant = require('./const')
 
-module.exports = core;
+module.exports = core
 
 const program = new commander.Command()
 
 let args, config
 
-async function core() { 
+async function core() {
   try {
     // 脚手架启动阶段
     await prepare()
@@ -28,7 +28,7 @@ async function core() {
   }
 }
 
-async function prepare () {
+async function prepare() {
   checkPkgVersion()
   checkRoot()
   checkUserHome()
@@ -37,39 +37,39 @@ async function prepare () {
 }
 
 // 检查包的版本号
-function checkPkgVersion () {
-    log.notice('cli', pkg.version)
+function checkPkgVersion() {
+  log.notice('cli', pkg.version)
 }
 
 // 检查用户，根用户自动降级
-function checkRoot () {
-  const rootCheck = require('root-check');
+function checkRoot() {
+  const rootCheck = require('root-check')
   // 对 root 进行用户降级
   rootCheck()
 }
 
 // 检查用户主目录
-function checkUserHome () {
+function checkUserHome() {
   if (!userHome || !pathExists(userHome)) {
     throw new Error(colors.red('当前登录用户主目录不存在'))
   }
 }
 
 // 检查环境变量
-function checkEnv () {
+function checkEnv() {
   const dotenv = require('dotenv')
   const dotenvPath = path.resolve(userHome, '.env')
   if (pathExists(dotenvPath)) {
     config = dotenv.config({
-      path: dotenvPath
+      path: dotenvPath,
     })
   }
   createDefaultCliHome()
 }
 
-function createDefaultCliHome () {
+function createDefaultCliHome() {
   const cliConfig = {
-    home: userHome
+    home: userHome,
   }
   if (process.env.CLI_HOME) {
     cliConfig['cliHome'] = path.join(userHome, process.env.CLI_HOME)
@@ -80,7 +80,7 @@ function createDefaultCliHome () {
 }
 
 // 检查最新版本
-async function checkGlobalUpdate () {
+async function checkGlobalUpdate() {
   // 1. 获取当前版本号和模板名
   const currentVersion = pkg.version
   const npmName = pkg.name
@@ -88,14 +88,16 @@ async function checkGlobalUpdate () {
   const { getNpmSemverVersion } = require('@xiaolh-cli-dev/get-npm-info')
   const lastVersion = await getNpmSemverVersion(currentVersion, npmName)
   if (lastVersion && semver.gt(lastVersion, currentVersion)) {
-    log.warn(colors.yellow(`请手动更新 ${npmName}，当前版本 ${currentVersion}，最新版本 ${lastVersion}
-    更新命令: npm install -g ${npmName}`))
+    log.warn(
+      colors.yellow(`请手动更新 ${npmName}，当前版本 ${currentVersion}，最新版本 ${lastVersion}
+    更新命令: npm install -g ${npmName}`)
+    )
   }
 }
 
 // 注册命令
-function registerCommand () {
-  program     
+function registerCommand() {
+  program
     .name(Object.keys(pkg.bin)[0])
     .usage('<command> [options]')
     .version(pkg.version)
@@ -105,6 +107,12 @@ function registerCommand () {
   program
     .command('init [projectName]')
     .option('-f, --force', '是否强制初始化项目')
+    .action(exec)
+
+  program
+    .command('publish')
+    .option('--refreshServer', '是否强制更新Server')
+    .option('--refreshToken', '是否强制更新远程仓库Token')
     .action(exec)
 
   // 开启 debug 模式
@@ -129,7 +137,7 @@ function registerCommand () {
   // 对未知命令的监听
   program.on('command:*', (obj) => {
     console.log(colors.red('未知的命令：', obj[0]))
-    const availableCommands = program.commands.map(command => command.name)
+    const availableCommands = program.commands.map((command) => command.name)
     if (availableCommands.length) {
       console.log(colors.red('可用命令：', availableCommands.join(',')))
     }

@@ -5,12 +5,13 @@ const { exec: spawn } = require('@xiaolh-cli-dev/utils')
 // const formatPath = require('@xiaolh-cli-dev/format-path')
 
 const SETTINGS = {
-  init: '@xiaolh-cli-dev/init'
+  init: '@xiaolh-cli-dev/init',
+  publish: '@xiaolh-cli-dev/publish',
 }
 
-const CACHE_DIR  = 'dependencies/'
+const CACHE_DIR = 'dependencies/'
 
-async function exec () {
+async function exec() {
   let package
   let targetPath = process.env.CLI_TARGET_PATH
   const homePath = process.env.CLI_HOME_PATH
@@ -33,7 +34,7 @@ async function exec () {
     targetPath,
     storeDir,
     packageName,
-    packageVersion
+    packageVersion,
   })
   if (await package.exists()) {
     // 更新 package
@@ -59,7 +60,7 @@ async function exec () {
     const args = Array.from(arguments)
     const cmd = args[args.length - 1]
     const obj = Object.create(null)
-    Object.keys(cmd).forEach(key => {
+    Object.keys(cmd).forEach((key) => {
       if (cmd.hasOwnProperty(key) && !key.startsWith('_') && key !== 'parent') {
         obj[key] = cmd[key]
       }
@@ -69,13 +70,13 @@ async function exec () {
     // 使用 node 执行加载到的包的代码
     const child = spawn('node', ['-e', code], {
       cwd: process.cwd(),
-      stdio: 'inherit'
+      stdio: 'inherit',
     })
-    child.on('error', err => {
+    child.on('error', (err) => {
       log.error(err.message)
       process.exit(1)
     })
-    child.on('exit', e => {
+    child.on('exit', (e) => {
       log.success('命令执行成功：', e)
       process.exit(e)
     })
