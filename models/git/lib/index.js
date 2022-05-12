@@ -14,6 +14,7 @@ const GIT_SERVER_FILE = '.git_server'
 const GIT_TOKEN_FILE = '.git_token'
 const GIT_OWN_FILE = '.git_own'
 const GIT_LOGIN_FILE = '.git_login'
+const GIT_IGNORE_FILE = '.gitignore'
 const GIT_ROOT_DIR = '.git'
 const GITHUB = 'github'
 const GITEE = 'gitee'
@@ -79,6 +80,7 @@ class Git {
     await this.getUserAndOrgs() // 获取用户或组织信息
     await this.checkGitOwner() // 检查远程仓库类型(个人|组织)
     await this.checkRepo() // 检查并创建远程仓库
+    await this.checkGitignore() // 检查并创建 .gitignore 文件
   }
 
   async checkHomePath() {
@@ -244,6 +246,40 @@ class Git {
     } else {
       log.success('远程仓库信息获取成功')
       this.repo = repo
+    }
+  }
+
+  // .gitignore 文件是防止将一些无需提交的文件提交到远程仓库
+  async checkGitignore() {
+    const gitignore = path.resolve(this.dir, GIT_IGNORE_FILE)
+    if (!gitignore) {
+      writeFile(
+        gitignore,
+        `.DS_Store
+node_modules
+/dist
+
+# local env files
+.env.loval
+.env.*.local
+
+# log files
+npm-debug.log*
+yarn-debug.log*
+yarn-eroro.log*
+cnpm-debug.log*
+
+# editor directives and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+      `
+      )
+      log.success(`自动写入 ${GIT_IGNORE_FILE} 文件成功`)
     }
   }
 }
