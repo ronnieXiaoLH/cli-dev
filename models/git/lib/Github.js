@@ -22,6 +22,33 @@ class Github extends GitServer {
       per_page: 100,
     })
   }
+
+  getRepo(login, name) {
+    name = 'interview'
+    return this.request
+      .get(`/repos/${login}/${name}`)
+      .then((res) => this.handleResponse(res))
+  }
+
+  createRepo(name) {
+    return this.request.post(
+      '/user/repos',
+      { name },
+      {
+        Accept: 'application/vnd.github.v3+json',
+      }
+    )
+  }
+
+  createOrgRepo(name, login) {
+    return this.request.post(
+      `/orgs/${login}/repos`,
+      { name },
+      {
+        Accept: 'application/vnd.github.v3+json',
+      }
+    )
+  }
 }
 
 module.exports = Github

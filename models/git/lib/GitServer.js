@@ -19,6 +19,10 @@ class GitServer {
     error('createOrgRepo')
   }
 
+  getRepo() {
+    error('getRepo')
+  }
+
   getRemote() {
     error('getRemote')
   }
@@ -29,6 +33,16 @@ class GitServer {
 
   getOrg() {
     error('getOrg')
+  }
+
+  isHttpResponse = (response) => response && Number.isInteger(response.status)
+
+  handleResponse = (response) => {
+    if (this.isHttpResponse(response) && response.status !== 200) {
+      return null
+    } else {
+      return response
+    }
   }
 }
 

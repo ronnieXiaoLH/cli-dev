@@ -113,6 +113,7 @@ function registerCommand() {
     .command('publish')
     .option('--refreshServer', '是否强制更新Server')
     .option('--refreshToken', '是否强制更新远程仓库Token')
+    .option('--refreshOwner', '是否强制更新远程仓库类型')
     .action(exec)
 
   // 开启 debug 模式
