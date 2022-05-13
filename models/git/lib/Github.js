@@ -24,7 +24,6 @@ class Github extends GitServer {
   }
 
   getRepo(login, name) {
-    name = 'interview'
     return this.request
       .get(`/repos/${login}/${name}`)
       .then((res) => this.handleResponse(res))
@@ -48,6 +47,10 @@ class Github extends GitServer {
         Accept: 'application/vnd.github.v3+json',
       }
     )
+  }
+
+  getRemote(login, name) {
+    return `https://git@github.com/${login}/${name}.git`
   }
 }
 

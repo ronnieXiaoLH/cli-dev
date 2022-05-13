@@ -1,5 +1,6 @@
 'use strict'
 const path = require('path')
+const fs = require('fs')
 const SimpleGit = require('simple-git')
 const userHome = require('user-home')
 const fse = require('fs-extra')
@@ -69,10 +70,6 @@ class Git {
     this.refreshOwner = refreshOwner
   }
 
-  init() {
-    console.log('init')
-  }
-
   async prepare() {
     this.checkHomePath() // 检查用户主目录
     await this.checkGitServer() // 检查用户远程仓库类型
@@ -81,6 +78,108 @@ class Git {
     await this.checkGitOwner() // 检查远程仓库类型(个人|组织)
     await this.checkRepo() // 检查并创建远程仓库
     await this.checkGitignore() // 检查并创建 .gitignore 文件
+    await this.init() // 本地仓库初始化
+  }
+
+  async init() {
+    if (await this.getRemote()) return // git 初始化已经完成
+    await this.initAndAddRemote() // 本地项目 git init 添加 git remote
+    await this.initCommit()
+  }
+
+  async initCommit() {
+    await this.checkConflicted()
+    await this.checkNotCommitted()
+    if (await this.checkRemoteMaster()) {
+      await this.pullRemoteRepo('master', {
+        '--allow-unrelated-histories': null, // 强制合并
+      })
+    } else {
+      // 远程仓库不存在 master 分支，直接推送代码至 master 分支
+      await this.pushRemoteRepo('master')
+    }
+  }
+
+  async pullRemoteRepo(branchName, options) {
+    log.info(`同步远程${branchName}分支代码`)
+    await this.git.pull('origin', branchName, options).catch((err) => {
+      log.error(err.message)
+    })
+  }
+
+  async pushRemoteRepo(branchName) {
+    log.info(`推送代码至${branchName}分支`)
+    await this.git.push('origin', branchName)
+    log.success('推送代码成功')
+  }
+
+  async checkRemoteMaster() {
+    try {
+      return (
+        (await this.git.listRemote(['--refs'])).indexOf('refs/heads/master') !==
+        -1
+      )
+    } catch (error) {
+      return false
+    }
+  }
+
+  async checkNotCommitted() {
+    const status = await this.git.status()
+    if (
+      status.not_added.length > 0 ||
+      status.created.length > 0 ||
+      status.deleted.length > 0 ||
+      status.modified.length > 0 ||
+      status.renamed.length > 0
+    ) {
+      log.verbose('status', status)
+      await this.git.add(status.not_added)
+      await this.git.add(status.created)
+      await this.git.add(status.deleted)
+      await this.git.add(status.modified)
+      await this.git.add(status.renamed)
+      let message
+      while (!message) {
+        message = (
+          await inquirer.prompt({
+            type: 'text',
+            name: 'message',
+            message: '请输入 commit 信息：',
+          })
+        ).message
+      }
+      await this.git.commit(message)
+      log.success('本次 commit 成功')
+    }
+  }
+
+  async checkConflicted() {
+    log.info('代码冲突检查')
+    const status = await this.git.status()
+    if (status.conflicted.length > 0) {
+      throw new Error('当前代码存在冲突，请手动处理合并后再重试')
+    }
+  }
+
+  async getRemote() {
+    const gitPath = path.resolve(this.dir, GIT_ROOT_DIR)
+    this.remote = this.gitServer.getRemote(this.login, this.name)
+    if (fs.existsSync(gitPath)) {
+      log.success('git 初始化已经完成')
+      return true
+    }
+  }
+
+  async initAndAddRemote() {
+    log.info('执行 git 初始化')
+    await this.git.init(this.dir)
+    log.info('添加 git remote')
+    const remotes = await this.git.getRemotes() // 拿到项目的所有 remotes
+    log.verbose('git remotes', remotes)
+    if (!remotes.find((item) => item.name === 'origin')) {
+      await this.git.addRemote('origin', this.remote)
+    }
   }
 
   async checkHomePath() {
@@ -224,7 +323,6 @@ class Git {
 
   async checkRepo() {
     let repo = await this.gitServer.getRepo(this.login, this.name)
-    log.verbose('repo', repo)
     if (!repo) {
       let spinner = spinnerStart('开始创建远程仓库...')
       try {
@@ -247,14 +345,16 @@ class Git {
       log.success('远程仓库信息获取成功')
       this.repo = repo
     }
+    log.verbose('repo', repo)
   }
 
   // .gitignore 文件是防止将一些无需提交的文件提交到远程仓库
   async checkGitignore() {
-    const gitignore = path.resolve(this.dir, GIT_IGNORE_FILE)
+    const gitignorePath = path.resolve(this.dir, GIT_IGNORE_FILE)
+    const gitignore = readFile(gitignorePath)
     if (!gitignore) {
       writeFile(
-        gitignore,
+        gitignorePath,
         `.DS_Store
 node_modules
 /dist
