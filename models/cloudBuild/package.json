@@ -1,6 +1,6 @@
 {
-  "name": "@xiaolh-cli-dev/publish",
-  "version": "1.0.0",
+  "name": "@xiaolh-cli-dev/cloud-build",
+  "version": "1.0.2",
   "description": "> TODO: description",
   "author": "xiaolonghao <941285782@qq.com>",
   "homepage": "https://github.com/ronnieXiaoLH/cli-dev#readme",
@@ -27,9 +27,6 @@
     "url": "https://github.com/ronnieXiaoLH/cli-dev/issues"
   },
   "dependencies": {
-    "@xiaolh-cli-dev/command": "file:../../models/command",
-    "@xiaolh-cli-dev/git": "file:../../models/git",
-    "@xiaolh-cli-dev/log": "file:../../utils/log",
-    "fs-extra": "^10.1.0"
+    "socket.io-client": "^2.0.0"
   }
 }

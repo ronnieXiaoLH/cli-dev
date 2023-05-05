@@ -2,7 +2,7 @@
   "name": "@xiaolh-cli-dev/package",
   "version": "1.0.2",
   "description": "> TODO: description",
-  "author": "xiaolonghao <xiaolonghao@linklogis.com>",
+  "author": "xiaolonghao <941285782@qq.com>",
   "homepage": "https://github.com/ronnieXiaoLH/cli-dev#readme",
   "license": "ISC",
   "main": "lib/index.js",
@@ -14,7 +14,7 @@
     "lib"
   ],
   "publishConfig": {
-    "registry": "http://nexus.linklogis.cn/nexus/content/groups/lls-npm/"
+    "registry": "https://registry.npmjs.org/"
   },
   "repository": {
     "type": "git",

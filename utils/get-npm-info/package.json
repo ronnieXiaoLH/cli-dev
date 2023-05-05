@@ -2,7 +2,7 @@
   "name": "@xiaolh-cli-dev/get-npm-info",
   "version": "1.0.2",
   "description": "> TODO: description",
-  "author": "xiaolonghao <xiaolonghao@linklogis.com>",
+  "author": "xiaolonghao <941285782@qq.com>",
   "homepage": "https://github.com/ronnieXiaoLH/cli-dev#readme",
   "license": "ISC",
   "main": "lib/index.js",

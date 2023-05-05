@@ -5,6 +5,7 @@ const SimpleGit = require('simple-git')
 const userHome = require('user-home')
 const fse = require('fs-extra')
 const inquirer = require('inquirer')
+const semver = require('semver')
 const log = require('@xiaolh-cli-dev/log')
 const { readFile, writeFile, spinnerStart } = require('@xiaolh-cli-dev/utils')
 const Github = require('./Github')
@@ -21,6 +22,9 @@ const GITHUB = 'github'
 const GITEE = 'gitee'
 const REPO_OWNER_USER = 'user'
 const REPO_OWNER_ORG = 'org'
+const VERSION_RELEASE = 'release'
+const VERSION_DEVELOP = 'dev'
+
 const GIT_SERVER_TYPE = [
   {
     name: 'Github',
@@ -57,7 +61,6 @@ class Git {
     this.version = version // 项目版本
     this.dir = dir // 项目目录
     this.git = new SimpleGit(this.dir) // SimpleGit 实例
-    console.log(this.git)
     this.gitServer = null // gitServer 实例
     this.homePath = null // 本地缓存目录
     this.user = null // 用户信息
@@ -68,6 +71,7 @@ class Git {
     this.refreshServer = refreshServer
     this.refreshToken = refreshToken
     this.refreshOwner = refreshOwner
+    this.branch = null // 本地开发分支
   }
 
   async prepare() {
@@ -85,6 +89,131 @@ class Git {
     if (await this.getRemote()) return // git 初始化已经完成
     await this.initAndAddRemote() // 本地项目 git init 添加 git remote
     await this.initCommit()
+  }
+
+  async commit() {
+    // 完成代码仓库初始化后，当前分支是处于 master 分支
+    // 1. 生成开发分支
+    await this.getCurrentVersion()
+    // 2. 检查 stash 区
+    await this.checkStatus()
+    // 3. 检查代码冲突
+    await this.checkConflicted()
+    // 4. 切换开发分支
+    await this.checkoutBranch(this.branch)
+    // 5.合并远程 master 分支和开发分支代码
+    await this.pullRemoteMasterAndBranch()
+    // 6.将开发分支代码推送到远仓库
+    await this.pushRemoteRepo(this.branch)
+  }
+
+  async checkStatus() {
+    log.info('检查 stash 记录')
+    const stashList = await this.git.stashList()
+    if (stashList.all.length > 0) {
+      await this.git.stash(['pop'])
+      log.success('stash pop 成功')
+    }
+  }
+
+  async getCurrentVersion() {
+    // 1. 获取远程发布分支
+    // 版本号规范：release/x.y.x，dev/x.y.z
+    // 版本号递增规范：major/minor/patch
+    log.info('获取代码分支')
+    const remoteBranchList = await this.getRemoteBranchList(VERSION_RELEASE)
+    let releaseVersion = null
+    if (remoteBranchList.length > 0) {
+      releaseVersion = remoteBranchList[0]
+    }
+    log.verbose('线上最新版本号：', releaseVersion)
+    // 2. 生成本地开发分支
+    const devVersion = this.version
+    if (!releaseVersion) {
+      this.branch = `${VERSION_DEVELOP}/${devVersion}`
+    } else if (semver.gt(this.version, releaseVersion)) {
+      log.info('本地版本大于线上最新版本', `${devVersion} >= ${releaseVersion}`)
+      this.branch = `${VERSION_DEVELOP}/${devVersion}`
+    } else {
+      log.info('当前线上最新版本大于本地版本')
+      const incType = (
+        await inquirer.prompt({
+          type: 'list',
+          name: 'incType',
+          message: '自动升级版本，请选择升级版本类型',
+          choices: [
+            {
+              name: `小版本(${releaseVersion} -> ${semver.inc(
+                releaseVersion,
+                'patch'
+              )})`,
+              value: 'patch',
+            },
+            {
+              name: `中版本(${releaseVersion} -> ${semver.inc(
+                releaseVersion,
+                'minor'
+              )})`,
+              value: 'minor',
+            },
+            {
+              name: `大版本(${releaseVersion} -> ${semver.inc(
+                releaseVersion,
+                'major'
+              )})`,
+              value: 'major',
+            },
+          ],
+        })
+      ).incType
+      const incVersion = semver.inc(releaseVersion, incType)
+      this.branch = `${VERSION_DEVELOP}/${incVersion}`
+      this.version = incVersion
+    }
+    log.verbose('本地开发分支', this.branch)
+    // 3. 将 version 同步到 package.json
+    this.syncVersionToPackageJson()
+  }
+
+  syncVersionToPackageJson() {
+    const packageJsonPath = `${this.dir}/package.json`
+    const pkg = fse.readJsonSync(packageJsonPath)
+    if (pkg && pkg.version !== this.version) {
+      pkg.version = this.version
+      fse.writeJsonSync(packageJsonPath, pkg, { spaces: 2 })
+    }
+  }
+
+  async getRemoteBranchList(type) {
+    let remoteList = []
+    try {
+      remoteList = await this.git.listRemote(['--refs'])
+    } catch (error) {
+      log.error(error.message)
+    }
+    let reg
+    if (type === VERSION_RELEASE) {
+      reg = /.+?refs\/tags\/release\/(\d+\.\d+\.\d+)/g
+    } else {
+      reg = /.+?refs\/heads\/dev\/(\d+\.\d+\.\d+)/g
+    }
+    return remoteList
+      .split('\n')
+      .map((remote) => {
+        const match = reg.exec(remote)
+        reg.lastIndex = 0
+        if (match && semver.valid(match[1])) {
+          return match[1]
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        if (semver.lte(b, a)) {
+          if (a === b) return 0
+          return -1
+        }
+        return 1
+      })
   }
 
   async initCommit() {
@@ -159,6 +288,36 @@ class Git {
     const status = await this.git.status()
     if (status.conflicted.length > 0) {
       throw new Error('当前代码存在冲突，请手动处理合并后再重试')
+    }
+  }
+
+  async checkoutBranch(branch) {
+    const localBranchList = await this.git.branchLocal()
+    // 判断切换的分支是否存在，存在直接切换，不存在先创建分支再切换
+    if (localBranchList.all.includes(branch)) {
+      await this.git.checkout(branch)
+    } else {
+      await this.git.checkoutLocalBranch(branch)
+    }
+    log.success(`分支切换到${branch}`)
+  }
+
+  async pullRemoteMasterAndBranch() {
+    log.info(`合并 【master】 -> 【${this.branch}】`)
+    await this.pullRemoteRepo('master')
+    log.success('合并远程 【master】 分支代码成功')
+    await this.checkConflicted()
+    log.info('检查远程开发分支')
+    const remoteBranchList = await this.getRemoteBranchList()
+    console.log(remoteBranchList)
+    // if (remoteBranchList)
+    if (remoteBranchList.includes(this.version)) {
+      log.info(`合并 【${this.branch} -> ${this.branch}】`)
+      await this.pullRemoteRepo(this.branch)
+      log.success(`合并远程 【${this.branch}】 分支代码成功`)
+      await this.checkConflicted()
+    } else {
+      log.success(`不存在远程分支 【${this.branch}】`)
     }
   }
 
